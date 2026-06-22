@@ -20,11 +20,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Bước cần thiết để hỗ trợ build đa kiến trúc (ARM64)
+      # BƯỚC KIỂM TRA: Liệt kê cấu trúc thư mục để xem chính xác file Dockerfile nằm ở đâu
+      - name: List files in repository
+        run: |
+          echo "=== THƯ MỤC GỐC ==="
+          ls -la
+          echo "=== KIỂM TRA THƯ MỤC BACKEND (Nếu có) ==="
+          ls -la backend || echo "Không có thư mục backend"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # Khởi tạo trình build nâng cao
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -47,9 +53,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./backend/dockerfile
+          # Tạm thời để mặc định để chạy bước List files trước, xem log rồi ta sửa chuẩn sau
+          file: ./Dockerfile 
           push: true
-          # Chỉ định xuất ra cả 2 bản x86_64 và arm64, VPS nào cũng "chơi" được
-          platforms: linux/amd64,linux/arm64 
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
