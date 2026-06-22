@@ -39,6 +39,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./dockerfile # Chỉ định chính xác file viết thường của repo gốc
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.steps.meta.outputs.labels }}
+          labels: ${{ steps.meta.outputs.labels }}
