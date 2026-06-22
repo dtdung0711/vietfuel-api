@@ -20,17 +20,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # BƯỚC TỰ TẠO DOCKERFILE: Vì repo không có sẵn, ta tự tạo ra một file Dockerfile tối ưu cho Node.js
+      # BƯỚC CẬP NHẬT: Tự động tạo Dockerfile tối ưu, sao chép cả backend lẫn frontend vào vị trí chính xác
       - name: Create Dockerfile dynamically
         run: |
           cat << 'EOF' > ./Dockerfile
           FROM node:20-alpine
           WORKDIR /app
-          # Copy các file quản lý package từ thư mục backend vào
+
+          # Cài đặt thư viện cho phần backend trước để tối ưu layer cache
           COPY backend/package*.json ./
           RUN npm ci --only=production
-          # Copy toàn bộ mã nguồn của backend vào container
+
+          # Copy toàn bộ mã nguồn của backend vào /app
           COPY backend/ .
+
+          # Đồng thời copy thư mục frontend từ ngoài vào đúng vị trí /frontend mà ứng dụng gọi tới
+          COPY frontend/ /frontend/
+
           EXPOSE 3000
           CMD ["node", "index.js"]
           EOF
@@ -60,8 +66,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile # Trỏ thẳng vào file Dockerfile vừa được tạo tự động phía trên
+          file: ./Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64 # Build đa kiến trúc hỗ trợ cả VPS ARM64 của bạn
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
