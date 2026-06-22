@@ -20,6 +20,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Bước cần thiết để hỗ trợ build đa kiến trúc (ARM64)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Khởi tạo trình build nâng cao
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -39,7 +47,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./backend/dockerfile # Đường dẫn chính xác đến file Dockerfile của tác giả
+          file: ./backend/dockerfile
           push: true
+          # Chỉ định xuất ra cả 2 bản x86_64 và arm64, VPS nào cũng "chơi" được
+          platforms: linux/amd64,linux/arm64 
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
