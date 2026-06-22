@@ -1,0 +1,45 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ "main", "master" ] # Tự động chạy khi bạn push/merge vào nhánh này
+  workflow_dispatch: # Cho phép bạn bấm nút tự chạy bằng tay bất cứ lúc nào
+
+env:
+  REGISTRY: ghcr.io
+  # Tên image sẽ chuyển thành dạng chữ thường (lowercase) để hợp lệ với Docker
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Cấp quyền ghi để upload image lên GitHub Packages
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Token tự động có sẵn, không cần cấu hình thêm
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ id.meta.outputs.tags }}
+          labels: ${{ id.meta.outputs.labels }}
